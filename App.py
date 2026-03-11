@@ -8,55 +8,37 @@ st.set_page_config(page_title="Garden Tracker", page_icon="🌼")
 # --- BEAUTIFUL GARDEN STYLING ---
 st.markdown("""
     <style>
-    /* Main Background with Stars/Daisies feeling */
     .stApp { 
         background-color: #FDF5E6; 
         background-image: radial-gradient(#d4dcca 0.5px, transparent 0.5px);
         background-size: 20px 20px;
     }
-    
-    /* Global Text Color */
     html, body, [class*="st-"] { color: #2E4732 !important; }
+    h1 { color: #556B2F !important; font-family: 'Georgia', serif; text-align: center; }
     
-    /* Headers */
-    h1 { 
-        color: #556B2F !important; 
-        font-family: 'Georgia', serif;
-        text-align: center;
-        text-shadow: 1px 1px 2px #fff;
-    }
-
-    /* Search and Input Boxes */
-    input {
-        background-color: #FFFFFF !important;
-        border-radius: 15px !important;
-        border: 1px solid #CCD5AE !important;
-        color: #1B261E !important;
-    }
-    
-    /* Item Cards */
     .inventory-card {
         background-color: #FFFFFF;
-        padding: 20px;
+        padding: 15px;
         border-radius: 20px;
         border: 1px solid #E9EDC9;
-        border-left: 10px solid #D4A373; /* Earthy Wood/Clay accent */
-        margin-bottom: 15px;
-        box-shadow: 0px 5px 15px rgba(0,0,0,0.03);
-    }
-
-    /* The Buttons */
-    .stButton>button {
-        background-color: #556B2F !important;
-        color: white !important;
-        border-radius: 25px;
-        border: none;
-        font-weight: bold;
-        transition: 0.3s;
+        border-left: 10px solid #D4A373;
+        margin-bottom: 5px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.02);
     }
     
-    /* Daisy Decoration */
-    .daisy { color: #E9EDC9; font-size: 20px; }
+    /* Input Box Styles */
+    input {
+        background-color: #FFFFFF !important;
+        border-radius: 10px !important;
+        color: #1B261E !important;
+    }
+
+    /* Buttons */
+    .stButton>button {
+        border-radius: 20px;
+        font-weight: bold;
+        width: 100%;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -70,10 +52,8 @@ else:
 # --- APP INTERFACE ---
 st.markdown("<h1>✨ Garden of Treasures 🌼</h1>", unsafe_allow_html=True)
 
-# --- SEARCH BAR ---
-search_query = st.text_input("🔍 Search your garden...", placeholder="Type item name or location...")
+search_query = st.text_input("🔍 Search your garden...", placeholder="Search items or locations...")
 
-# --- ADD NEW ITEM ---
 with st.expander("🌱 Plant a New Item"):
     with st.form("add_form", clear_on_submit=True):
         name = st.text_input("Item Name")
@@ -83,7 +63,6 @@ with st.expander("🌱 Plant a New Item"):
         eb = c1.checkbox("eBay")
         ps = c2.checkbox("Posh")
         mc = c3.checkbox("Merc")
-        
         if st.form_submit_button("Save to Garden"):
             if name:
                 new_row = {"Item": name, "Loc": loc, "eBay": eb, "Posh": ps, "Merc": mc, "Status": "Available"}
@@ -91,10 +70,9 @@ with st.expander("🌱 Plant a New Item"):
                 df.to_csv(DB_FILE, index=False)
                 st.rerun()
 
-# --- DISPLAY LIST ---
-st.markdown("### 🌿 Your Current Stock")
+st.markdown("---")
 
-# Filter logic for Search
+# --- DISPLAY LIST ---
 available_items = df[df["Status"] == "Available"]
 if search_query:
     available_items = available_items[
@@ -103,25 +81,50 @@ if search_query:
     ]
 
 if available_items.empty:
-    st.write("No treasures found here... ✨")
+    st.write("No treasures found... ✨")
 else:
     for idx, row in available_items.iterrows():
-        # Clean up platform display
+        # The Display Card
         plats = [p for p in ["eBay", "Posh", "Merc"] if row[p]]
         plat_tags = " | ".join(plats) if plats else "Not listed"
         
-        # Display Card
         st.markdown(f"""
             <div class="inventory-card">
-                <span style="font-size: 22px;">🌼</span> <strong>{row['Item']}</strong><br>
-                <span style="color: #6B705C; font-size: 0.9em;">📍 {row['Loc']} • 🌐 {plat_tags}</span>
+                <span style="font-size: 20px;">🌼</span> <strong>{row['Item']}</strong><br>
+                <span style="color: #6B705C; font-size: 0.85em;">📍 {row['Loc']} • 🌐 {plat_tags}</span>
             </div>
             """, unsafe_allow_html=True)
         
-        # Sold Button
-        if st.button(f"Mark as Sold", key=f"btn_{idx}"):
-            df.at[idx, "Status"] = "Sold"
-            df.to_csv(DB_FILE, index=False)
-            st.success(f"Sold! Remember to remove from {plat_tags}!")
-            st.balloons()
-            st.rerun()
+        # Buttons in a row
+        btn_col1, btn_col2 = st.columns(2)
+        
+        with btn_col1:
+            if st.button(f"✏️ Edit", key=f"edit_{idx}"):
+                st.session_state[f"editing_{idx}"] = True
+
+        with btn_col2:
+            if st.button(f"✅ Sold", key=f"sold_{idx}"):
+                df.at[idx, "Status"] = "Sold"
+                df.to_csv(DB_FILE, index=False)
+                st.success(f"Remember to remove from {plat_tags}!")
+                st.balloons()
+                st.rerun()
+
+        # Edit Section (only shows if "Edit" was clicked)
+        if st.session_state.get(f"editing_{idx}", False):
+            with st.container():
+                st.markdown("---")
+                new_loc = st.text_input("Update Location", value=row['Loc'], key=f"loc_{idx}")
+                st.write("Update Platforms:")
+                new_eb = st.checkbox("eBay", value=row['eBay'], key=f"eb_{idx}")
+                new_ps = st.checkbox("Poshmark", value=row['Posh'], key=f"ps_{idx}")
+                new_mc = st.checkbox("Mercari", value=row['Merc'], key=f"mc_{idx}")
+                
+                if st.button("Save Changes", key=f"save_{idx}"):
+                    df.at[idx, "Loc"] = new_loc
+                    df.at[idx, "eBay"] = new_eb
+                    df.at[idx, "Posh"] = new_ps
+                    df.at[idx, "Merc"] = new_mc
+                    df.to_csv(DB_FILE, index=False)
+                    st.session_state[f"editing_{idx}"] = False
+                    st.rerun()
