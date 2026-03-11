@@ -1,45 +1,64 @@
 import streamlit as st
 import pandas as pd
 import os
+import random
 
 # --- PAGE SETUP ---
 st.set_page_config(page_title="Garden Tracker", page_icon="🌼")
 
-# --- BEAUTIFUL GARDEN STYLING ---
+# --- ANIMATED DAISY & STAR STYLING ---
 st.markdown("""
     <style>
+    /* Deep Earthy Green & Cream Theme */
     .stApp { 
-        background-color: #FDF5E6; 
-        background-image: radial-gradient(#d4dcca 0.5px, transparent 0.5px);
-        background-size: 20px 20px;
-    }
-    html, body, [class*="st-"] { color: #2E4732 !important; }
-    h1 { color: #556B2F !important; font-family: 'Georgia', serif; text-align: center; }
-    
-    .inventory-card {
-        background-color: #FFFFFF;
-        padding: 15px;
-        border-radius: 20px;
-        border: 1px solid #E9EDC9;
-        border-left: 10px solid #D4A373;
-        margin-bottom: 5px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.02);
+        background-color: #F1F3E9; /* Softer Sage-Cream */
+        background-image: radial-gradient(#2E4732 0.3px, transparent 0.3px);
+        background-size: 40px 40px;
     }
     
-    /* Input Box Styles */
-    input {
-        background-color: #FFFFFF !important;
-        border-radius: 10px !important;
-        color: #1B261E !important;
+    /* Text Visibility */
+    html, body, [class*="st-"] { color: #1B261E !important; }
+    h1 { color: #2E4732 !important; font-family: 'Georgia', serif; text-align: center; border-bottom: 2px solid #556B2F; padding-bottom: 10px; }
+
+    /* Animated Daisies and Stars in Background */
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+        50% { opacity: 0.6; }
+        100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+    }
+    .decoration {
+        position: fixed;
+        bottom: -10%;
+        z-index: -1;
+        animation: float 15s linear infinite;
+        user-select: none;
     }
 
-    /* Buttons */
+    /* Item Cards - Deeper Green Border */
+    .inventory-card {
+        background-color: #FFFFFF;
+        padding: 18px;
+        border-radius: 15px;
+        border: 2px solid #A3B18A;
+        border-top: 8px solid #3A5A40; /* Deep Forest Green */
+        margin-bottom: 5px;
+        box-shadow: 4px 4px 10px rgba(0,0,0,0.05);
+    }
+
+    /* Buttons - Deep Green */
     .stButton>button {
-        border-radius: 20px;
-        font-weight: bold;
-        width: 100%;
+        background-color: #3A5A40 !important;
+        color: white !important;
+        border-radius: 12px;
+        border: none;
     }
     </style>
+    
+    <div class="decoration" style="left: 10%; animation-delay: 0s;">🌼</div>
+    <div class="decoration" style="left: 30%; animation-delay: 5s;">✨</div>
+    <div class="decoration" style="left: 55%; animation-delay: 2s;">🌼</div>
+    <div class="decoration" style="left: 80%; animation-delay: 8s;">✨</div>
+    <div class="decoration" style="left: 15%; animation-delay: 10s;">✨</div>
     """, unsafe_allow_html=True)
 
 # --- DATA STORAGE ---
@@ -50,9 +69,9 @@ else:
     df = pd.DataFrame(columns=["Item", "Loc", "eBay", "Posh", "Merc", "Status"])
 
 # --- APP INTERFACE ---
-st.markdown("<h1>✨ Garden of Treasures 🌼</h1>", unsafe_allow_html=True)
+st.markdown("<h1>✨ Stardust Garden Inventory 🌼</h1>", unsafe_allow_html=True)
 
-search_query = st.text_input("🔍 Search your garden...", placeholder="Search items or locations...")
+search_query = st.text_input("🔍 Search your treasures...", placeholder="Search items or locations...")
 
 with st.expander("🌱 Plant a New Item"):
     with st.form("add_form", clear_on_submit=True):
@@ -63,7 +82,7 @@ with st.expander("🌱 Plant a New Item"):
         eb = c1.checkbox("eBay")
         ps = c2.checkbox("Posh")
         mc = c3.checkbox("Merc")
-        if st.form_submit_button("Save to Garden"):
+        if st.form_submit_button("Add to Garden"):
             if name:
                 new_row = {"Item": name, "Loc": loc, "eBay": eb, "Posh": ps, "Merc": mc, "Status": "Available"}
                 df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
@@ -84,26 +103,43 @@ if available_items.empty:
     st.write("No treasures found... ✨")
 else:
     for idx, row in available_items.iterrows():
-        # The Display Card
         plats = [p for p in ["eBay", "Posh", "Merc"] if row[p]]
         plat_tags = " | ".join(plats) if plats else "Not listed"
         
         st.markdown(f"""
             <div class="inventory-card">
-                <span style="font-size: 20px;">🌼</span> <strong>{row['Item']}</strong><br>
-                <span style="color: #6B705C; font-size: 0.85em;">📍 {row['Loc']} • 🌐 {plat_tags}</span>
+                <span style="font-size: 20px;">🌼</span> <strong style="color: #3A5A40;">{row['Item']}</strong><br>
+                <span style="color: #588157; font-size: 0.9em;">📍 {row['Loc']} • 🌐 {plat_tags}</span>
             </div>
             """, unsafe_allow_html=True)
         
-        # Buttons in a row
         btn_col1, btn_col2 = st.columns(2)
-        
         with btn_col1:
             if st.button(f"✏️ Edit", key=f"edit_{idx}"):
                 st.session_state[f"editing_{idx}"] = True
-
         with btn_col2:
             if st.button(f"✅ Sold", key=f"sold_{idx}"):
+                df.at[idx, "Status"] = "Sold"
+                df.to_csv(DB_FILE, index=False)
+                st.success(f"Remember to remove from {plat_tags}!")
+                st.balloons()
+                st.rerun()
+
+        if st.session_state.get(f"editing_{idx}", False):
+            with st.container():
+                st.markdown("---")
+                new_loc = st.text_input("Update Location", value=row['Loc'], key=f"loc_{idx}")
+                new_eb = st.checkbox("eBay", value=row['eBay'], key=f"eb_{idx}")
+                new_ps = st.checkbox("Poshmark", value=row['Posh'], key=f"ps_{idx}")
+                new_mc = st.checkbox("Mercari", value=row['Merc'], key=f"mc_{idx}")
+                if st.button("Save Changes", key=f"save_{idx}"):
+                    df.at[idx, "Loc"] = new_loc
+                    df.at[idx, "eBay"] = new_eb
+                    df.at[idx, "Posh"] = new_ps
+                    df.at[idx, "Merc"] = new_mc
+                    df.to_csv(DB_FILE, index=False)
+                    st.session_state[f"editing_{idx}"] = False
+                    st.rerun()
                 df.at[idx, "Status"] = "Sold"
                 df.to_csv(DB_FILE, index=False)
                 st.success(f"Remember to remove from {plat_tags}!")
