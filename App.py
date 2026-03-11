@@ -140,27 +140,3 @@ else:
                     df.to_csv(DB_FILE, index=False)
                     st.session_state[f"editing_{idx}"] = False
                     st.rerun()
-                df.at[idx, "Status"] = "Sold"
-                df.to_csv(DB_FILE, index=False)
-                st.success(f"Remember to remove from {plat_tags}!")
-                st.balloons()
-                st.rerun()
-
-        # Edit Section (only shows if "Edit" was clicked)
-        if st.session_state.get(f"editing_{idx}", False):
-            with st.container():
-                st.markdown("---")
-                new_loc = st.text_input("Update Location", value=row['Loc'], key=f"loc_{idx}")
-                st.write("Update Platforms:")
-                new_eb = st.checkbox("eBay", value=row['eBay'], key=f"eb_{idx}")
-                new_ps = st.checkbox("Poshmark", value=row['Posh'], key=f"ps_{idx}")
-                new_mc = st.checkbox("Mercari", value=row['Merc'], key=f"mc_{idx}")
-                
-                if st.button("Save Changes", key=f"save_{idx}"):
-                    df.at[idx, "Loc"] = new_loc
-                    df.at[idx, "eBay"] = new_eb
-                    df.at[idx, "Posh"] = new_ps
-                    df.at[idx, "Merc"] = new_mc
-                    df.to_csv(DB_FILE, index=False)
-                    st.session_state[f"editing_{idx}"] = False
-                    st.rerun()
