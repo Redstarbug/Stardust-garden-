@@ -8,15 +8,54 @@ st.set_page_config(page_title="Garden Tracker", page_icon="🌼")
 # --- STYLING ---
 st.markdown("""
     <style>
-    .stApp { background-color: #FDF5E6; }
-    h1 { color: #556B2F; font-family: 'serif'; }
-    .inventory-card {
-        background-color: white;
-        padding: 15px;
-        border-radius: 10px;
-        border-left: 5px solid #556B2F;
-        margin-bottom: 10px;
+    st.markdown("""
+    <style>
+    /* Main Background */
+    .stApp { 
+        background-color: #FDF5E6; 
     }
+    
+    /* Global Text Color - Making it a very dark green/gray for visibility */
+    html, body, [class*="st-"] {
+        color: #1B261E !important; 
+    }
+
+    /* Titles and Headers */
+    h1, h2, h3 { 
+        color: #2E4732 !important; 
+        font-family: 'Georgia', serif;
+        font-weight: bold;
+    }
+
+    /* Input Labels (Item Name, Location, etc) */
+    .stMarkdown p, label {
+        color: #2E4732 !important;
+        font-weight: 600 !important;
+    }
+
+    /* The Item Cards */
+    .inventory-card {
+        background-color: #FFFFFF;
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #CCD5AE; /* Soft sage border */
+        border-left: 8px solid #556B2F; /* Thicker forest green stripe */
+        margin-bottom: 12px;
+        box-shadow: 0px 4px 6px rgba(0,0,0,0.05);
+        color: #1B261E;
+    }
+
+    /* Buttons - Dark Green with White Text */
+    .stButton>button {
+        background-color: #2E4732 !important;
+        color: white !important;
+        border-radius: 20px;
+        font-weight: bold;
+        border: none;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     </style>
     """, unsafe_allow_html=True)
 
